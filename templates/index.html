@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <link href="/static/css/boxSize.css" rel="stylesheet">
+    <script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.5.1/jquery.js"></script>
+    <style>
+
+           .text {
+                 background: orange;
+            }
+
+        .breakline{
+            margin-left:10px;
+            font-size:10px;
+        width: 500px;
+    word-break: break-all;
+
+    word-wrap:break-word;
+
+}
+    </style>
+</head>
+
+<body>
+<div class="wrap">
+    <div class="div1">
+    <h1 >初中短文阅读题小助手</h1>
+    <label>----------------------------------------------</label>
+    <p>By vera zhang, 仅仅作为学习交流用，欢迎大佬赐教。verazhang3333@gmail.com </p>
+    </div>
+
+     <div class="picDesdiv"  align="center"> <h2 >阅读短文答案分析 </h2></div>
+
+    <div class="div2"  >
+         <div class="smallbox">
+         <img id='img1' src="/static/images/cat.png" alt="pls upload" class="imgsize" >
+          <div class="btndiv">
+            <label>上传阅读文件:</label>
+<!--              <p id="des1">...</p>-->
+             <input type="file" id="filebtn1" style="" accept="image/png,image/jpeg" >
+              <p>目前仅支持3个选项，4个选项的单选题</p>
+          </div>
+        </div>
+          <div id = 'showares' class="smallbox">
+              <div id="passage" class="breakline">
+               <p id="des1" class='breakline'>段落显示区域</p>
+              </div>
+<!--              动态加载div 几个题目就是几个div-->
+
+
+          </div>
+        </div>
+
+    </div>
+
+</body>
+
+
+
+<script type="text/javascript">
+    $(document).ready(function (){
+        var strarr = new Array();
+
+         function highlight(passage,strarr1) {
+
+             var text = passage ;
+             var strarr = new Array();
+                strarr = strarr1;
+
+            var history = document.getElementsByClassName('text');
+            if (history.length > 0) {
+                 text = originalText;
+             }
+            changedtext = text;
+            for (i=0;i<strarr.length;i++) {
+                     var inputValue =strarr[i].split(':')[1];
+                     //返回字符串下标出现的位置
+                    changedtext = changedtext.split(inputValue).join(`<span class="text">${inputValue}</span>`);
+            }
+          return changedtext;
+        }
+
+
+
+         $("#filebtn1").change(function(){
+             //   显示段落原文
+             $('#des1').text('One moment please ... ')
+             $('.breakline').html('loading ... ');
+
+        //     显示段落选项
+        //     显示原文句子
+        //     显示推荐答案
+
+        var file = $("#filebtn1")[0].files[0]; // here send uploaded file to backend
+        if (window.FileReader) {
+            var reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onloadend = function (e) {
+                $('#img1').attr("src",e.target.result);    //uploaded picture base 64 string <----  e.target.result
+                // alert(e.target.result);
+                var info = {pic:e.target.result }
+                $.ajax({
+                    url:'/uploadpic/',
+                    method:'POST',
+                    data:info,
+                    success:
+                    function (respon){
+                        var arr = eval(respon);
+                        // alert(arr[0].passage);
+                        var passage = arr[0].passage;
+
+                        console.log(respon)
+
+                        var div_list  = new Array();
+                        var num_questions = arr.length;
+
+                     for (var i = 0; i < num_questions; i++) {
+                         var qs = arr[i].question;
+                         var opts = arr[i].opts;
+                         var hint = arr[i].highlight;
+                         var pred = arr[i].pred;
+                         var startidx =arr[i].startidx;
+                         var endidx = arr[i].endidx;
+                         strarr.push(hint);
+
+                         var p1 = '<p>'+qs+'</p>';
+                         var p2 = '<p>'+opts+'</p>';
+                         var p3 = '<p>'+hint+'</p>';
+                         var p4 = '<p>'+pred+'</p>';
+                         var p5 = '<p>'+'-----------------------------------'+'</p>';
+                      //   高亮
+                         str = '<div id="page' + i + '" class="breakline">'+p1+p2+p3+p4+p5+'</ div>'
+                            div_list.push(str)
+
+                     }
+                        passage =passage .toLowerCase();
+                        hignlighted_passage = highlight(passage,strarr);
+
+                       $('#passage').html(hignlighted_passage);
+                    //    加载answer的div
+                        for(var i =0 ; i<div_list.length; i++){
+                            $('#passage').append(div_list[i])
+
+                        }
+
+
+
+                    }
+                });
+
+            };
+        }
+    });
+
+
+
+    });
+
+
+
+
+
+
+</script>
+
+
+</html>
